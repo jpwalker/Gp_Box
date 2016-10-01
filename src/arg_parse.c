@@ -8,15 +8,16 @@
 #include <glib.h>
 #include "Gp_box.h"
 
+extern gdouble rlim[2];
+extern gint rnum;
+extern gdouble box_L;
+extern gchar ** filename;
+
 
 // ARGUMENT DEFAULTS
-extern gdouble rlim[2];
 gdouble rlim[2] = {RMIN, RMAX};
-extern gint rnum;
 gint rnum = RNUM;
-extern gdouble box_L;
 gdouble box_L = L;
-extern gchar ** filename;
 gchar ** filename = NULL;
 
 // Main Group and Context's strings

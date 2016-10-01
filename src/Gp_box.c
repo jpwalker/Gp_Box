@@ -11,13 +11,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Gp_box.h"
+#include "Corr_Func.h"
 
 extern gdouble rlim[2];
 extern gint rnum;
 extern gdouble box_L;
 extern gchar ** filename;
 
-double calculate_box_RR(gsl_histogram * RR)
+void calculate_box_RR(gsl_histogram * RR)
 {
 	const double alpha = box_L / 2.;
 	const double box_vol = 8. * pow(alpha, 3.);
@@ -31,20 +32,32 @@ double calculate_box_RR(gsl_histogram * RR)
 		{
 			if (r[i] <= alpha)
 			{
-				RR[i] = 4. / 3. * PI * pow(r[i], 3.);
+				vol[i] = 4.f / 3.f * PI * pow(r[i], 3.f);
 			}
 			else if (r[i] > alpha && r[i] <= alpha * SQ2)
 			{
-				RR[i] = 6. * alpha * PI * pow(r[i], 2.) - 8. * PI *
-						pow(r[i], 3.) / 3.f - pow(alpha, 3.) * PI  * 2.;
+				vol[i] = 6.f * alpha * PI * pow(r[i], 2.f) - 8.f * PI *
+						pow(r[i], 3.f) / 3.f - pow(alpha, 3.f) * PI  * 2.f;
 			}
 			else if (r[i] > SQ2 * alpha && r[i] < SQ3 * alpha)
 			{
-				RR[i] = 0. / 0.;
+				vol[i] = 6.f * alpha * PI * pow(r[i], 2.f) - 8.f * PI *
+						pow(r[i], 3.f) / 3.f - pow(alpha, 3.f) * PI  * 2.f;
+				// Pre-calculations for numbers that will be used alot.
+				double t1 = sqrt(r[i] * r[i] - alpha * alpha);
+				double t2 = sqrt(r[i] * r[i] - 2.f * alpha * alpha);
+				// Correction to formula from the case above.
+				double correction =  PI / 6.f * pow(r[i], 3.f) + alpha / 6.f *
+						(alpha * alpha - 3.f * r[i] * r[i]) * acos(alpha / t1) -
+						pow(r[i], 3.f) / 3.f * atan(alpha * alpha / (r[i] * t2)) +
+						pow(alpha, 4.f) / 3.f * t2 / t1 / t1 + alpha / 6.f *
+						(alpha * alpha - 3.f * r[i] * r[i]) * atan(t2 / alpha) +
+						alpha * alpha / 3.f * pow(t2, 3.f) / t1 / t1;
+				vol[i] += 24.f * correction;
 			}
 			else
 			{
-				RR[i] = box_vol;
+				vol[i] = box_vol;
 			}
 		}
 		gsl_histogram_accumulate(RR, r_center, (vol[1] - vol[0]) / box_vol);
@@ -88,7 +101,9 @@ int main(int argc, char ** argv)
 		exit(EXIT_FAILURE);
 	}
 	gsl_histogram_set_ranges_uniform(Gp, rlim[0], rlim[1]);
-	calculate_box_RR()
+	calculate_box_RR(Gp);
+	corr_func* corr_Gp = corr_func_init(rnum);
+
 	gsl_histogram_free(Gp);
 	return EXIT_SUCCESS;
 }

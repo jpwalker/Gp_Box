@@ -9,6 +9,7 @@
 #define SRC_GP_BOX_H_
 
 #include <glib.h>
+#include <gsl/gsl_histogram.h>
 
 #define PI 3.14159265358979323846264338327950288419716939937510
 #define SQ2 1.41421356237309504880168872420969807856967187537694
@@ -29,6 +30,6 @@ GOptionContext *  setup_arg_parse(void);
 
 // Functions Gp_box.c
 void parse_arguments(int, char **);
-double calculate_box_RR(gsl_histogram *);
+void calculate_box_RR(gsl_histogram *);
 
 #endif /* SRC_GP_BOX_H_ */
