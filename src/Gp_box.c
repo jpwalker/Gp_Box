@@ -5,13 +5,12 @@
  *      Author: jpwalker
  */
 
-#include <gsl/gsl_histogram.h>
-#include <glib.h>
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "gsl/gsl_histogram.h"
+#include "glib.h"
+#include "math.h"
+#include "stdlib.h"
+#include "stdio.h"
 #include "Gp_box.h"
-#include "Corr_Func.h"
 
 extern gdouble rlim[2];
 extern gint rnum;
@@ -28,6 +27,7 @@ void calculate_box_RR(gsl_histogram * RR)
 		double r[2] = {0, 0};
 		gsl_histogram_get_range(RR, i, &r[0], &r[1]);
 		double r_center = (r[1] + r[0]) / 2;
+		double delta_r = r[1] - r[0];
 		for (unsigned int i = 0; i <= 1; i++)
 		{
 			if (r[i] <= alpha)
@@ -60,7 +60,8 @@ void calculate_box_RR(gsl_histogram * RR)
 				vol[i] = box_vol;
 			}
 		}
-		gsl_histogram_accumulate(RR, r_center, (vol[1] - vol[0]) / box_vol);
+		gsl_histogram_accumulate(RR, r_center, (vol[1] - vol[0]) /
+				box_vol / delta_r);
 	}
 }
 
@@ -102,8 +103,12 @@ int main(int argc, char ** argv)
 	}
 	gsl_histogram_set_ranges_uniform(Gp, rlim[0], rlim[1]);
 	calculate_box_RR(Gp);
-	corr_func* corr_Gp = corr_func_init(rnum);
-
+	FILE * out_file = fopen(filename[0], "w+");
+	fprintf(out_file, "%s\n", HEADER);
+	if (gsl_histogram_fprintf(out_file, Gp, "%E,\t", "%E") != 0) {
+		fprintf(stderr, EOUT, "Unable to write to output file.");
+	}
+	fclose(out_file);
 	gsl_histogram_free(Gp);
 	return EXIT_SUCCESS;
 }

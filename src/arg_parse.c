@@ -5,7 +5,7 @@
  *      Author: jpwalker
  */
 
-#include <glib.h>
+#include "glib.h"
 #include "Gp_box.h"
 
 extern gdouble rlim[2];
